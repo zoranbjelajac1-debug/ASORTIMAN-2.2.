@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>ASORTIMAN 2.2</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+  </script>
+  <style>
+    /* --- KOMPAKTNI STILOVI ZA MOBITELE --- */
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #f4f6fa;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8faff;
+      --text-primary: #0b2b4a;
+      --text-secondary: #1f3852;
+      --text-muted: #5b7c9a;
+      --border-color: #e2ebf5;
+      --accent: #1f5b8e;
+      --accent-light: #2d7bb6;
+      --accent-bg: #eef3f9;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --radius: 10px;
+      --transition: 0.2s ease;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a2e;
+      --bg-card: #16213e;
+      --bg-card-hover: #1a2744;
+      --text-primary: #e8e8e8;
+      --text-secondary: #c8d0dc;
+      --text-muted: #8a9bb0;
+      --border-color: #2a3a5c;
+      --accent: #3d8bcb;
+      --accent-light: #5a9fd6;
+      --accent-bg: #1e2d4a;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      background: var(--bg-primary);
+      padding: 4px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background var(--transition);
+      padding-bottom: calc(8px + var(--safe-bottom));
+    }
+
+    .app-container {
+      max-width: 680px;
+      width: 100%;
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 8px 8px 12px;
+      transition: background var(--transition);
+    }
+
+    /* --- HEADER --- */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 4px;
+      min-height: 36px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    h1 small {
+      font-size: 0.5rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      background: var(--accent-bg);
+      padding: 1px 8px;
+      border-radius: 10px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .theme-toggle,
+    .collapse-toggle {
+      background: var(--accent-bg);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle:active,
+    .collapse-toggle:active {
+      transform: scale(0.9);
+    }
+
+    /* --- IMPORT TOOLS - SAŽETI --- */
+    .import-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 4px;
+      align-items: center;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      max-height: 200px;
+    }
+
+    .import-tools.collapsed {
+      max-height: 36px;
+    }
+
+    .import-tools .file-label,
+    .import-tools .action-btn,
+    .import-tools .clear-btn {
+      min-height: 30px;
+      min-width: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
+    .import-tools.collapsed .file-label span,
+    .import-tools.collapsed .action-btn span,
+    .import-tools.collapsed .clear-btn span {
+      display: none;
+    }
+
+    .import-tools.collapsed .file-label,
+    .import-tools.collapsed .action-btn,
+    .import-tools.collapsed .clear-btn {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      min-width: 30px;
+    }
+
+    .import-tools .file-label {
+      background: var(--accent);
+      color: white;
+    }
+
+    .import-tools .action-btn {
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+
+    .import-tools .clear-btn {
+      background: #fee8e8;
+      color: #b13a3a;
+    }
+
+    .import-tools .file-label:active,
+    .import-tools .action-btn:active,
+    .import-tools .clear-btn:active {
+      transform: scale(0.95);
+    }
+
+    .import-tools input[type="file"] {
+      display: none;
+    }
+
+    .import-tools .file-status {
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+    }
+
+    .import-tools.collapsed .file-status {
+      display: none;
+    }
+
+    .import-status {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      width: 100%;
+      margin-top: 2px;
+      min-height: 1.2em;
+      font-weight: 500;
+    }
+
+    .import-tools.collapsed .import-status {
+      display: none;
+    }
+
+    .import-status.loading {
+      color: var(--accent-light);
+      animation: pulse 1s infinite;
+    }
+
+    .import-status.success {
+      color: #4caf50;
+    }
+
+    .import-status.error {
+      color: #d32f2f;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* --- STATUS BAR --- */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      padding: 2px 0;
+      flex-wrap: wrap;
+      gap: 2px;
+      min-height: 24px;
+    }
+
+    .status-bar .saved-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-bar .saved-indicator .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4caf50;
+      transition: background 0.3s;
+    }
+
+    .status-bar .saved-indicator .dot.gray {
+      background: #b0b0b0;
+    }
+
+    /* --- LOCATION SECTION --- */
+    .location-section {
+      background: var(--accent-bg);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      margin: 4px 0;
+      transition: background var(--transition);
+    }
+
+    .loc-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .loc-selector {
+      flex: 2 1 150px;
+      min-width: 100px;
+      position: relative;
+    }
+
+    .loc-selector input {
+      width: 100%;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      font-weight: 500;
+      outline: none;
+      transition: var(--transition);
+      min-height: 32px;
+    }
+
+    .loc-selector input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(45, 123, 182, 0.12);
+    }
+
+    .loc-selector input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .kat-lok-display {
+      flex: 1 0 auto;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 4px 12px;
+      border: 1px solid var(--border-color);
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      min-width: 60px;
+      text-align: center;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kat-lok-display .label {
+      color: var(--text-muted);
+      font-size: 0.5rem;
+    }
+
+    .kat-lok-display .value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* --- SUGGESTIONS --- */
+    .loc-suggestions {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .loc-suggestions.show {
+      display: block;
+    }
+
+    .loc-suggestions .suggestion-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      transition: var(--transition);
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .loc-suggestions .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .loc-suggestions .suggestion-item:hover,
+    .loc-suggestions .suggestion-item.active {
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+
+    .loc-suggestions .suggestion-item .suggestion-grad {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    /* --- ADDRESS BOX --- */
+    .address-box {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 6px 12px;
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px 14px;
+      border-left: 3px solid var(--accent-light);
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      transition: background var(--transition);
+    }
+
+    .address-box .label {
+      color: var(--text-muted);
+      margin-right: 2px;
+      font-size: 0.55rem;
+      font-weight: 500;
+    }
+
+    .address-box .kupac-box {
+      width: 100%;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+    }
+
+    .address-box .kupac-box .label {
+      font-weight: 400;
+    }
+
+    /* --- LOCATION STATS --- */
+    .location-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin-top: 4px;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .location-stats .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      padding: 2px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .location-stats .stat-item .num {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* --- FILTER BAR --- */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+      background: var(--bg-card);
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      transition: background var(--transition);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    [data-theme="dark"] .filter-bar {
+      background: rgba(22, 33, 62, 0.92);
+    }
+
+    .filter-group {
+      flex: 1 0 60px;
+      min-width: 50px;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 0.45rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 1px;
+    }
+
+    .filter-group select {
+      width: 100%;
+      padding: 4px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      font-size: 0.65rem;
+      color: var(--text-primary);
+      transition: var(--transition);
+      min-height: 28px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%235b7c9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      padding-right: 22px;
+    }
+
+    .filter-group select:focus {
+      border-color: var(--accent-light);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(45, 123, 182, 0.12);
+    }
+
+    /* --- SEARCH VIEW ROW --- */
+    .search-view-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 4px 0;
+      background: var(--bg-card);
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      transition: background var(--transition);
+    }
+
+    .search-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 2 1 140px;
+      min-width: 100px;
+    }
+
+    .search-wrapper .search-label {
+      font-size: 0.45rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .search-wrapper input {
+      flex: 1;
+      padding: 4px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      font-size: 0.7rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: var(--transition);
+      min-height: 28px;
+      min-width: 50px;
+    }
+
+    .search-wrapper input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 2px rgba(45, 123, 182, 0.12);
+    }
+
+    .search-wrapper input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .location-count-badge {
+      background: var(--accent);
+      color: white;
+      font-size: 0.55rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 16px;
+      white-space: nowrap;
+      display: inline-block;
+      min-width: 40px;
+      text-align: center;
+      flex-shrink: 0;
+      min-height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reset-filters {
+      background: var(--accent-bg);
+      border: none;
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 0.55rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      height: 28px;
+      white-space: nowrap;
+      transition: var(--transition);
+      flex-shrink: 0;
+      min-height: 28px;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reset-filters:active {
+      transform: scale(0.95);
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 3px;
+      flex: 0 0 auto;
+    }
+
+    .view-toggle button {
+      background: var(--accent-bg);
+      border: none;
+      border-radius: 14px;
+      padding: 4px 12px;
+      font-size: 0.6rem;
+      color: var(--accent);
+      cursor: pointer;
+      transition: var(--transition);
+      height: 28px;
+      white-space: nowrap;
+      min-height: 28px;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .view-toggle button:active {
+      transform: scale(0.95);
+    }
+
+    .view-toggle button.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* --- CARDS WRAPPER --- */
+    .cards-wrapper {
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      max-height: 55vh;
+      overflow-y: auto;
+      padding: 4px;
+      transition: background var(--transition);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* --- ITEM CARD --- */
+    .item-card {
+      background: var(--bg-card-hover);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      border-left: 3px solid var(--accent-light);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2px 10px;
+      font-size: 0.85rem;
+      transition: all var(--transition);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .item-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .item-card:active {
+      transform: scale(0.99);
+    }
+
+    .item-card .card-label {
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      align-self: center;
+      background: var(--accent-bg);
+      padding: 1px 8px;
+      border-radius: 8px;
+      display: inline-block;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .item-card .card-value {
+      color: var(--text-secondary);
+      word-break: break-word;
+      align-self: center;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+
+    .item-card .card-value.sifra {
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+
+    .item-card .card-value.sifra .kat-art-badge {
+      background: var(--accent-light);
+      color: white;
+      font-size: 0.5rem;
+      font-weight: 500;
+      padding: 1px 10px;
+      border-radius: 12px;
+      line-height: 1.6;
+    }
+
+    .item-card .card-tags {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin-top: 1px;
+    }
+
+    .item-card .badge-vrsta {
+      background: #dfe9f5;
+      padding: 2px 12px;
+      border-radius: 14px;
+      font-size: 0.6rem;
+      font-weight: 500;
+      color: #1a4b74;
+    }
+
+    .item-card .badge-podvrsta {
+      background: #eef3fa;
+      padding: 2px 12px;
+      border-radius: 14px;
+      font-size: 0.6rem;
+      color: #2d5580;
+    }
+
+    [data-theme="dark"] .badge-vrsta {
+      background: #1a2d4a;
+      color: #8ab4e8;
+    }
+
+    [data-theme="dark"] .badge-podvrsta {
+      background: #1a2744;
+      color: #8aa8c8;
+    }
+
+    /* --- TABLICA --- */
+    .table-wrapper {
+      border-radius: var(--radius);
+      overflow-x: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      max-height: 55vh;
+      overflow-y: auto;
+      transition: background var(--transition);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.7rem;
+      min-width: 280px;
+      table-layout: fixed;
+    }
+
+    th {
+      background: var(--accent-bg);
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 2px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      font-size: 0.6rem;
+      word-wrap: break-word;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      word-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.4;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--accent-bg);
+    }
+
+    /* Dvoklik na redak tablice */
+    .table-row-clickable {
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .table-row-clickable:hover td {
+      background: var(--accent-bg);
+    }
+
+    .table-row-clickable:active {
+      transform: scale(0.99);
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 14%;
+      min-width: 45px;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 28%;
+      min-width: 65px;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 18%;
+      min-width: 55px;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 20%;
+      min-width: 50px;
+    }
+
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 20%;
+      min-width: 50px;
+    }
+
+    .table-badge-vrsta {
+      background: #dfe9f5;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.55rem;
+      font-weight: 500;
+      color: #1a4b74;
+      display: inline-block;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    .table-badge-podvrsta {
+      background: #eef3fa;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.55rem;
+      color: #2d5580;
+      display: inline-block;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    [data-theme="dark"] .table-badge-vrsta {
+      background: #1a2d4a;
+      color: #8ab4e8;
+    }
+
+    [data-theme="dark"] .table-badge-podvrsta {
+      background: #1a2744;
+      color: #8aa8c8;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 24px 12px;
+      font-style: italic;
+      font-size: 0.8rem;
+    }
+
+    /* --- ITEM COUNT --- */
+    .item-count {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 2px 0;
+    }
+
+    .item-count .export-group {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .item-count .export-group .export-btn {
+      background: var(--accent-bg);
+      border: none;
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 0.6rem;
+      color: var(--accent);
+      cursor: pointer;
+      transition: var(--transition);
+      height: 28px;
+      white-space: nowrap;
+      min-height: 28px;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-weight: 500;
+    }
+
+    .item-count .export-group .export-btn.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .item-count .export-group .export-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* --- FOOTER --- */
+    .footer-note {
+      margin-top: 8px;
+      font-size: 0.5rem;
+      color: var(--text-muted);
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+    }
+
+    /* --- SCROLLBAR --- */
+    .cards-wrapper::-webkit-scrollbar,
+    .table-wrapper::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    .cards-wrapper::-webkit-scrollbar-track,
+    .table-wrapper::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+      border-radius: 2px;
+    }
+
+    .cards-wrapper::-webkit-scrollbar-thumb,
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: var(--accent-light);
+      border-radius: 2px;
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (min-width: 480px) {
+      .item-card {
+        grid-template-columns: auto 1fr auto 1fr;
+        font-size: 0.9rem;
+      }
+      
+      .item-card .card-label:nth-child(3),
+      .item-card .card-value:nth-child(4) {
+        grid-column: auto;
+      }
+      
+      .item-card .card-label:nth-child(5),
+      .item-card .card-value:nth-child(6) {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .app-container {
+        padding: 6px 6px 10px;
+        border-radius: 12px;
+      }
+
+      .loc-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+      }
+
+      .loc-selector {
+        flex: 1 1 auto;
+        min-width: 100%;
+      }
+
+      .kat-lok-display {
+        text-align: center;
+        justify-content: center;
+        padding: 4px 10px;
+        min-height: 28px;
+      }
+
+      .search-view-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 4px 6px;
+        gap: 4px;
+      }
+
+      .search-wrapper {
+        flex: 1 1 100%;
+        min-width: 0;
+        gap: 4px;
+      }
+
+      .search-wrapper .search-label {
+        display: none;
+      }
+
+      .search-wrapper input {
+        flex: 1;
+        min-width: 60px;
+        font-size: 0.65rem;
+        padding: 3px 8px;
+        min-height: 26px;
+      }
+
+      .location-count-badge {
+        flex-shrink: 0;
+        font-size: 0.5rem;
+        padding: 2px 8px;
+        min-width: 32px;
+        min-height: 24px;
+      }
+
+      .view-toggle-row {
+        flex: 1 1 100%;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .view-toggle-row .reset-filters {
+        flex-shrink: 0;
+        font-size: 0.5rem;
+        padding: 3px 10px;
+        min-height: 26px;
+      }
+
+      .view-toggle-row .view-toggle {
+        flex: 1;
+        justify-content: flex-end;
+        gap: 3px;
+      }
+
+      .view-toggle button {
+        font-size: 0.55rem;
+        padding: 3px 10px;
+        min-height: 26px;
+        min-width: 32px;
+      }
+
+      .filter-bar {
+        padding: 4px 6px;
+        gap: 3px 4px;
+        flex-wrap: wrap;
+      }
+
+      .filter-group {
+        flex: 1 0 50px;
+        min-width: 40px;
+      }
+
+      .filter-group select {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+        min-height: 24px;
+        padding-right: 18px;
+      }
+
+      .item-card {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+        gap: 2px 8px;
+      }
+
+      .item-card .card-value.sifra {
+        font-size: 0.85rem;
+      }
+
+      .item-card .card-value {
+        font-size: 0.8rem;
+      }
+
+      .address-box {
+        font-size: 0.65rem;
+        padding: 4px 10px;
+        gap: 2px 10px;
+      }
+
+      .address-box .kupac-box {
+        font-size: 0.75rem;
+      }
+
+      .location-stats {
+        font-size: 0.55rem;
+        gap: 3px 6px;
+      }
+
+      .location-stats .stat-item {
+        padding: 2px 8px;
+      }
+
+      .header h1 {
+        font-size: 1rem;
+      }
+
+      .theme-toggle,
+      .collapse-toggle {
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+      }
+
+      .import-tools {
+        gap: 3px;
+      }
+
+      .import-tools .file-label,
+      .import-tools .action-btn,
+      .import-tools .clear-btn {
+        font-size: 0.6rem;
+        padding: 3px 8px;
+        min-height: 26px;
+        min-width: 26px;
+      }
+
+      .import-tools.collapsed .file-label,
+      .import-tools.collapsed .action-btn,
+      .import-tools.collapsed .clear-btn {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        min-width: 26px;
+      }
+
+      .import-tools .file-status {
+        max-width: 60px;
+        font-size: 0.5rem;
+      }
+
+      .item-count {
+        font-size: 0.6rem;
+      }
+
+      .item-count .export-group .export-btn {
+        font-size: 0.55rem;
+        padding: 3px 10px;
+        min-height: 26px;
+        min-width: 32px;
+      }
+
+      table {
+        font-size: 0.6rem;
+        min-width: 180px;
+      }
+
+      th {
+        font-size: 0.55rem;
+        padding: 5px 6px;
+        white-space: nowrap;
+      }
+
+      td {
+        font-size: 0.55rem;
+        padding: 5px 6px;
+      }
+
+      th:nth-child(1),
+      td:nth-child(1) {
+        width: 12%;
+        min-width: 35px;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 30%;
+        min-width: 55px;
+      }
+
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 16%;
+        min-width: 40px;
+      }
+
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 21%;
+        min-width: 40px;
+      }
+
+      th:nth-child(5),
+      td:nth-child(5) {
+        width: 21%;
+        min-width: 40px;
+      }
+
+      .table-badge-vrsta,
+      .table-badge-podvrsta {
+        font-size: 0.45rem;
+        padding: 1px 6px;
+      }
+
+      .item-card .badge-vrsta,
+      .item-card .badge-podvrsta {
+        font-size: 0.55rem;
+        padding: 1px 10px;
+      }
+
+      .item-card .card-value.sifra .kat-art-badge {
+        font-size: 0.45rem;
+        padding: 1px 8px;
+      }
+
+      .status-bar {
+        font-size: 0.55rem;
+        min-height: 20px;
+      }
+
+      .import-status {
+        font-size: 0.55rem;
+        min-height: 1em;
+      }
+
+      .loc-selector input {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        min-height: 30px;
+      }
+
+      .loc-suggestions .suggestion-item {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+        min-height: 30px;
+      }
+
+      .empty-state {
+        font-size: 0.7rem;
+        padding: 16px 8px;
+      }
+
+      .footer-note {
+        font-size: 0.45rem;
+      }
+    }
+
+    /* DODATNO ZA VRLO MALE EKRANE (< 400px) */
+    @media (max-width: 400px) {
+      .search-wrapper input {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        min-height: 24px;
+      }
+      .location-count-badge {
+        font-size: 0.45rem;
+        padding: 1px 6px;
+        min-height: 20px;
+        min-width: 24px;
+      }
+      .view-toggle button {
+        font-size: 0.5rem;
+        padding: 2px 8px;
+        min-height: 24px;
+        min-width: 28px;
+      }
+      .reset-filters {
+        font-size: 0.45rem;
+        padding: 2px 8px;
+        min-height: 24px;
+        min-width: 28px;
+      }
+      .filter-group select {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+        min-height: 22px;
+        padding-right: 16px;
+      }
+      .item-card {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        gap: 1px 6px;
+      }
+      .item-card .card-value.sifra {
+        font-size: 0.8rem;
+      }
+      .item-card .card-value {
+        font-size: 0.75rem;
+      }
+      .item-card .card-label {
+        font-size: 0.45rem;
+        padding: 0 6px;
+        min-width: 28px;
+      }
+      .item-count .export-group .export-btn {
+        font-size: 0.5rem;
+        padding: 2px 8px;
+        min-height: 24px;
+        min-width: 28px;
+      }
+      .import-tools .file-label,
+      .import-tools .action-btn,
+      .import-tools .clear-btn {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+        min-height: 24px;
+        min-width: 24px;
+      }
+      .import-tools.collapsed .file-label,
+      .import-tools.collapsed .action-btn,
+      .import-tools.collapsed .clear-btn {
+        font-size: 0.6rem;
+        padding: 2px 5px;
+        min-width: 24px;
+      }
+      .header h1 {
+        font-size: 0.9rem;
+      }
+      .theme-toggle,
+      .collapse-toggle {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+      }
+      .kat-lok-display {
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        min-height: 24px;
+      }
+      .loc-selector input {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        min-height: 28px;
+      }
+      .address-box {
+        font-size: 0.6rem;
+        padding: 3px 8px;
+      }
+      .address-box .kupac-box {
+        font-size: 0.7rem;
+      }
+      .location-stats {
+        font-size: 0.5rem;
+      }
+      .location-stats .stat-item {
+        padding: 1px 6px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .view-toggle-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 3px;
+      }
+      .view-toggle-row .reset-filters {
+        width: 100%;
+        justify-content: center;
+      }
+      .view-toggle-row .view-toggle {
+        justify-content: center;
+      }
+      .filter-group {
+        flex: 1 0 100%;
+      }
+    }
+
+    /* --- ANIMACIJE --- */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container" id="app">
+    <div class="header">
+      <h1> Asortiman <small>2.2</small></h1>
+      <div class="header-actions">
+        <button class="collapse-toggle" id="collapseToggle" title="Sažmi alate">📦</button>
+        <button class="theme-toggle" id="themeToggle" title="Tamna tema">🌙</button>
+      </div>
+    </div>
+
+    <div class="import-tools" id="importTools">
+      <button class="action-btn" id="githubImportBtn" style="background:var(--accent);color:white;font-weight:600;">📥 <span>Preuzmi</span></button>
+      
+      <label class="file-label" for="fileInput">📂 <span>Excel</span></label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      
+      <button class="action-btn" id="backupBtn">💾 <span>Backup</span></button>
+      <button class="action-btn" id="restoreBtn">📂 <span>Restore</span></button>
+      <input type="file" id="restoreInput" accept=".json">
+      <button class="clear-btn" id="clearDataBtn">🗑️ <span>Obriši</span></button>
+      <span class="file-status" id="fileStatus">-</span>
+      <span class="import-status" id="importStatus"></span>
+    </div>
+
+    <div class="status-bar">
+      <span id="dataInfo">Nema podataka</span>
+      <span class="saved-indicator"><span class="dot gray" id="saveDot"></span><span id="saveStatus">nije</span></span>
+    </div>
+
+    <div class="location-section">
+      <div class="loc-row">
+        <div class="loc-selector">
+          <input type="text" id="locationInput" placeholder="🔍 Pretraži lokaciju..." autocomplete="off">
+          <div class="loc-suggestions" id="suggestionsContainer"></div>
+        </div>
+        <div class="kat-lok-display">
+          <span class="label">📌 Kat.lok:</span>
+          <span class="value" id="katLokacijeDisplay">-</span>
+        </div>
+      </div>
+
+      <div class="location-stats" id="locationStats"></div>
+      <div class="address-box" id="addressBox">
+        <span class="kupac-box"><span class="label">👤 Kupac:</span> <span id="kupacDisplay">-</span></span>
+        <span><span class="label">📍 Adresa:</span> <span id="addrDisplay">-</span></span>
+        <span><span class="label">🏙️ Grad:</span> <span id="cityDisplay">-</span></span>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-group"><label>Vrsta</label><select id="filterVrsta"><option value="">Sve</option></select></div>
+      <div class="filter-group"><label>Podvrsta</label><select id="filterPodvrsta"><option value="">Sve</option></select></div>
+    </div>
+
+    <div class="search-view-row">
+      <div class="search-wrapper">
+        <span class="search-label">Pretraga</span>
+        <input type="text" id="searchInput" placeholder="🔍 Artikl, šifra, EAN..." autocomplete="off">
+        <span class="location-count-badge" id="locationCountBadge">0 lok.</span>
+      </div>
+      <div class="view-toggle-row">
+        <button class="reset-filters" id="resetFiltersBtn">✕ Reset</button>
+        <div class="view-toggle">
+          <button id="viewCards" class="active">📇 Kartice</button>
+          <button id="viewTable">📋 Tablica</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-wrapper" id="cardsContainer">
+      <div class="empty-state">📂 Uvezite Excel datoteku</div>
+    </div>
+
+    <div class="table-wrapper" id="tableContainer" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Šifra</th>
+            <th>Artikl</th>
+            <th>EAN</th>
+            <th>Vrsta</th>
+            <th>Podvrsta</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="5" class="empty-state">📂 Uvezite Excel datoteku</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="item-count">
+      <span id="itemCount">0 artikala</span>
+      <div class="export-group">
+        <button class="export-btn primary" id="exportFilteredBtn">📊 Prikaz</button>
+        <button class="export-btn" id="exportLocationsBtn">🏢 Lokacije</button>
+        <button class="export-btn" id="exportCustomerBtn">🏬 Kupac</button>
+      </div>
+    </div>
+    <div class="footer-note">💾 IndexedDB • 📶 offline • 🔄 backup/restore JSON</div>
+  </div>
+
+  <script>
+    (function() {
+      // --- DB Constants ---
+      const DB_NAME = 'AsortimanDB';
+      const STORE_NAME = 'articles';
+      const DB_VERSION = 20;
+
+      // --- Database functions ---
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (db.objectStoreNames.contains(STORE_NAME)) {
+              db.deleteObjectStore(STORE_NAME);
+            }
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            store.createIndex('lokacija', 'lokacija', { unique: false });
+            store.createIndex('vrsta', 'vrsta', { unique: false });
+            store.createIndex('podvrsta', 'podvrsta', { unique: false });
+            store.createIndex('awtSifra', 'awtSifra', { unique: false });
+            store.createIndex('artikl', 'artikl', { unique: false });
+            store.createIndex('kupac', 'kupac', { unique: false });
+          };
+          request.onsuccess = (e) => resolve(e.target.result);
+          request.onerror = (e) => {
+            console.error('openDB error:', e.target.error);
+            reject(e.target.error);
+          };
+          request.onblocked = () => {
+            reject(new Error('Baza je blokirana. Zatvorite druge kartice s ovom aplikacijom.'));
+          };
+        });
+      }
+
+      async function saveAllData(dataArray) {
+        try {
+          const db = await openDB();
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          await store.clear();
+          for (const item of dataArray) {
+            store.add(item);
+          }
+          return new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+          });
+        } catch (err) {
+          console.error('saveAllData error:', err);
+          throw err;
+        }
+      }
+
+      async function loadAllData() {
+        try {
+          const db = await openDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e.target.error);
+          });
+        } catch (err) {
+          console.error('loadAllData error:', err);
+          throw err;
+        }
+      }
+
+      async function clearAllDataDB() {
+        try {
+          const db = await openDB();
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.clear();
+          return new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+          });
+        } catch (err) {
+          console.error('clearAllDataDB error:', err);
+          throw err;
+        }
+      }
+
+      // --- State ---
+      let fullData = [],
+        locationSet = new Set(),
+        locationMap = new Map(),
+        currentView = 'cards',
+        importDate = localStorage.getItem('asortimanImportDate') || null;
+      let searchTimeout = null;
+      let locationInputTimeout = null;
+      let selectedSuggestionIndex = -1;
+      let currentKupac = '';
+      let currentLoc = '';
+      let toolsCollapsed = localStorage.getItem('asortimanToolsCollapsed') === 'true';
+
+      // --- DOM refs ---
+      const locationInput = document.getElementById('locationInput');
+      const suggestionsContainer = document.getElementById('suggestionsContainer');
+      const addrDisplay = document.getElementById('addrDisplay');
+      const cityDisplay = document.getElementById('cityDisplay');
+      const kupacDisplay = document.getElementById('kupacDisplay');
+      const katLokacijeDisplay = document.getElementById('katLokacijeDisplay');
+      const locationStats = document.getElementById('locationStats');
+      const tableBody = document.getElementById('tableBody');
+      const cardsContainer = document.getElementById('cardsContainer');
+      const tableContainer = document.getElementById('tableContainer');
+      const filterVrsta = document.getElementById('filterVrsta');
+      const filterPodvrsta = document.getElementById('filterPodvrsta');
+      const searchInput = document.getElementById('searchInput');
+      const locationCountBadge = document.getElementById('locationCountBadge');
+      const resetBtn = document.getElementById('resetFiltersBtn');
+      const fileInput = document.getElementById('fileInput');
+      const fileStatus = document.getElementById('fileStatus');
+      const itemCount = document.getElementById('itemCount');
+      const clearDataBtn = document.getElementById('clearDataBtn');
+      const dataInfo = document.getElementById('dataInfo');
+      const saveDot = document.getElementById('saveDot');
+      const saveStatus = document.getElementById('saveStatus');
+      const backupBtn = document.getElementById('backupBtn');
+      const restoreBtn = document.getElementById('restoreBtn');
+      const restoreInput = document.getElementById('restoreInput');
+      const viewCardsBtn = document.getElementById('viewCards');
+      const viewTableBtn = document.getElementById('viewTable');
+      const importStatus = document.getElementById('importStatus');
+      const exportFilteredBtn = document.getElementById('exportFilteredBtn');
+      const exportLocationsBtn = document.getElementById('exportLocationsBtn');
+      const exportCustomerBtn = document.getElementById('exportCustomerBtn');
+      const themeToggle = document.getElementById('themeToggle');
+      const githubImportBtn = document.getElementById('githubImportBtn');
+      const collapseToggle = document.getElementById('collapseToggle');
+      const importTools = document.getElementById('importTools');
+
+      // --- Collapse toggle ---
+      if (toolsCollapsed) {
+        importTools.classList.add('collapsed');
+        collapseToggle.textContent = '📦';
+      } else {
+        collapseToggle.textContent = '📂';
+      }
+
+      collapseToggle.addEventListener('click', () => {
+        toolsCollapsed = !toolsCollapsed;
+        importTools.classList.toggle('collapsed', toolsCollapsed);
+        collapseToggle.textContent = toolsCollapsed ? '📦' : '📂';
+        localStorage.setItem('asortimanToolsCollapsed', toolsCollapsed);
+      });
+
+      // --- Theme ---
+      let darkTheme = localStorage.getItem('asortimanTheme') === 'dark';
+      if (darkTheme) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggle.textContent = '☀️';
+      }
+
+      themeToggle.addEventListener('click', () => {
+        darkTheme = !darkTheme;
+        document.documentElement.setAttribute('data-theme', darkTheme ? 'dark' : '');
+        localStorage.setItem('asortimanTheme', darkTheme ? 'dark' : 'light');
+        themeToggle.textContent = darkTheme ? '☀️' : '🌙';
+      });
+
+      // --- Utilities ---
+      function normalizeStr(str) { return str ? String(str).trim() : ''; }
+
+      function updateSaveStatus(saved) {
+        saveDot.className = 'dot' + (saved ? '' : ' gray');
+        saveStatus.textContent = saved ? 'spremljeno' : 'nije';
+      }
+
+      function updateDataInfo() {
+        let info = fullData.length ? `${fullData.length} linija, ${locationSet.size} lok` : 'Nema podataka';
+        if (importDate) {
+          const d = new Date(importDate);
+          const formatted = d.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          info += ` • 📅 ${formatted}`;
+        }
+        dataInfo.textContent = info;
+      }
+
+      function setImportDate() {
+        const now = new Date().toISOString();
+        importDate = now;
+        localStorage.setItem('asortimanImportDate', now);
+        updateDataInfo();
+      }
+
+      function clearImportDate() {
+        importDate = null;
+        localStorage.removeItem('asortimanImportDate');
+        updateDataInfo();
+      }
+
+      function getKupacLocationCount() {
+        if (!currentKupac || !fullData.length) return 0;
+        const uniqueLokacije = new Set();
+        fullData.forEach(row => {
+          if (row.kupac === currentKupac && row.lokacija) {
+            uniqueLokacije.add(row.lokacija);
+          }
+        });
+        return uniqueLokacije.size;
+      }
+
+      function updateLocationStats() {
+        const loc = locationInput.value.trim();
+        const currentLocValid = loc && locationSet.has(loc);
+
+        const kupacLocCount = getKupacLocationCount();
+
+        let statsHtml = '';
+        if (currentKupac) {
+          statsHtml += `<span class="stat-item">👤 <span class="num">${currentKupac}</span></span>`;
+          statsHtml += `<span class="stat-item">📊 <span class="num">${kupacLocCount}</span> lokacija</span>`;
+        }
+
+        if (currentLocValid) {
+          const total = fullData.filter(r => r.lokacija === loc).length;
+          statsHtml += `<span class="stat-item">📦 <span class="num">${total}</span> artikala</span>`;
+        }
+
+        locationStats.innerHTML = statsHtml || '';
+      }
+
+      function updateAddressDisplay(loc) {
+        currentLoc = loc;
+        if (!loc || !locationMap.has(loc)) {
+          addrDisplay.textContent = '-';
+          cityDisplay.textContent = '-';
+          kupacDisplay.textContent = '-';
+          katLokacijeDisplay.textContent = '-';
+          currentKupac = '';
+          updateLocationStats();
+          return;
+        }
+        const info = locationMap.get(loc);
+        addrDisplay.textContent = info.adresa || '-';
+        cityDisplay.textContent = info.grad || '-';
+        kupacDisplay.textContent = info.kupac || '-';
+        currentKupac = info.kupac || '';
+
+        let katLokacije = info.katLokacije || [];
+        if (typeof katLokacije === 'string') {
+          katLokacije = katLokacije.split(',').map(s => s.trim()).filter(s => s);
+        }
+        if (!Array.isArray(katLokacije)) katLokacije = [];
+
+        if (katLokacije.length > 0) {
+          const sorted = [...katLokacije].sort((a, b) => {
+            const freqA = info.katFrekvencija ? info.katFrekvencija[a] || 0 : 0;
+            const freqB = info.katFrekvencija ? info.katFrekvencija[b] || 0 : 0;
+            return freqB - freqA;
+          });
+          katLokacijeDisplay.textContent = sorted.join(' / ');
+        } else {
+          katLokacijeDisplay.textContent = '-';
+        }
+        updateLocationStats();
+      }
+
+      function populateFilters() {
+        const vrstaSet = new Set(),
+          podvrstaSet = new Set();
+        for (const row of fullData) {
+          if (row.vrsta) vrstaSet.add(row.vrsta);
+          if (row.podvrsta) podvrstaSet.add(row.podvrsta);
+        }
+        const currentVrsta = filterVrsta.value;
+        filterVrsta.innerHTML = '<option value="">Sve</option>';
+        Array.from(vrstaSet).sort((a, b) => a.localeCompare(b, 'hr')).forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          filterVrsta.appendChild(opt);
+        });
+        if (currentVrsta && vrstaSet.has(currentVrsta)) filterVrsta.value = currentVrsta;
+        else filterVrsta.value = '';
+
+        const currentPod = filterPodvrsta.value;
+        filterPodvrsta.innerHTML = '<option value="">Sve</option>';
+        Array.from(podvrstaSet).sort((a, b) => a.localeCompare(b, 'hr')).forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          filterPodvrsta.appendChild(opt);
+        });
+        if (currentPod && podvrstaSet.has(currentPod)) filterPodvrsta.value = currentPod;
+        else filterPodvrsta.value = '';
+      }
+
+      function updatePodvrstaFilter() {
+        const selectedVrsta = filterVrsta.value;
+        const podvrstaSet = new Set();
+        for (const row of fullData) {
+          if (!selectedVrsta || row.vrsta === selectedVrsta) {
+            if (row.podvrsta) podvrstaSet.add(row.podvrsta);
+          }
+        }
+        const currentPod = filterPodvrsta.value;
+        filterPodvrsta.innerHTML = '<option value="">Sve</option>';
+        Array.from(podvrstaSet).sort((a, b) => a.localeCompare(b, 'hr')).forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          filterPodvrsta.appendChild(opt);
+        });
+        if (currentPod && podvrstaSet.has(currentPod)) filterPodvrsta.value = currentPod;
+        else filterPodvrsta.value = '';
+      }
+
+      function updateLocationCountBadge() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        if (!searchTerm || !fullData.length || !currentKupac) {
+          locationCountBadge.textContent = '0 lok.';
+          return;
+        }
+
+        const matchingArticles = fullData.filter(row => {
+          if (row.kupac !== currentKupac) return false;
+
+          const sifra = (row.awtSifra || '').toLowerCase();
+          const artikl = (row.artikl || '').toLowerCase();
+          const ean = (row.ean || '').toLowerCase();
+          const vrsta = (row.vrsta || '').toLowerCase();
+          const podvrsta = (row.podvrsta || '').toLowerCase();
+          return sifra.includes(searchTerm) || artikl.includes(searchTerm) || ean.includes(searchTerm) ||
+            vrsta.includes(searchTerm) || podvrsta.includes(searchTerm);
+        });
+
+        const uniqueLocations = new Set();
+        matchingArticles.forEach(row => {
+          if (row.lokacija) uniqueLocations.add(row.lokacija);
+        });
+
+        const count = uniqueLocations.size;
+        locationCountBadge.textContent = `${count} lok.`;
+      }
+
+      function getFilteredByCriteria() {
+        let filtered = fullData;
+        
+        const vrstaFilter = filterVrsta.value;
+        if (vrstaFilter) filtered = filtered.filter(row => row.vrsta === vrstaFilter);
+
+        const podFilter = filterPodvrsta.value;
+        if (podFilter) filtered = filtered.filter(row => row.podvrsta === podFilter);
+
+        const search = searchInput.value.trim().toLowerCase();
+        if (search) {
+          filtered = filtered.filter(row => {
+            const sifra = (row.awtSifra || '').toLowerCase();
+            const artikl = (row.artikl || '').toLowerCase();
+            const ean = (row.ean || '').toLowerCase();
+            const vrsta = (row.vrsta || '').toLowerCase();
+            const podvrsta = (row.podvrsta || '').toLowerCase();
+            return sifra.includes(search) || artikl.includes(search) || ean.includes(search) ||
+              vrsta.includes(search) || podvrsta.includes(search);
+          });
+        }
+
+        return filtered;
+      }
+
+      function getFilteredData() {
+        let loc = locationInput.value.trim();
+        if (loc && !locationSet.has(loc)) {
+          const match = Array.from(locationSet).find(l => l.toLowerCase() === loc.toLowerCase());
+          if (match) { loc = match;
+            locationInput.value = match; } else loc = '';
+        } else if (!loc || !locationSet.has(loc)) loc = '';
+
+        if (!loc || fullData.length === 0) return [];
+
+        let filtered = fullData.filter(row => row.lokacija === loc);
+
+        const vrstaFilter = filterVrsta.value;
+        if (vrstaFilter) filtered = filtered.filter(row => row.vrsta === vrstaFilter);
+
+        const podFilter = filterPodvrsta.value;
+        if (podFilter) filtered = filtered.filter(row => row.podvrsta === podFilter);
+
+        const search = searchInput.value.trim().toLowerCase();
+        if (search) {
+          filtered = filtered.filter(row => {
+            const sifra = (row.awtSifra || '').toLowerCase();
+            const artikl = (row.artikl || '').toLowerCase();
+            const ean = (row.ean || '').toLowerCase();
+            const vrsta = (row.vrsta || '').toLowerCase();
+            const podvrsta = (row.podvrsta || '').toLowerCase();
+            return sifra.includes(search) || artikl.includes(search) || ean.includes(search) ||
+              vrsta.includes(search) || podvrsta.includes(search);
+          });
+        }
+
+        filtered.sort((a, b) => (a.vrsta || '').localeCompare(b.vrsta || 'hr') || (a.podvrsta || '').localeCompare(b
+          .podvrsta || 'hr'));
+        return filtered;
+      }
+
+      // --- FUNKCIJA ZA DVOKLIK NA ARTIKAL ---
+      function handleArticleDoubleClick(rowData) {
+        let searchValue = '';
+        
+        if (rowData.awtSifra) {
+          searchValue = rowData.awtSifra;
+        } else if (rowData.artikl) {
+          searchValue = rowData.artikl;
+        } else if (rowData.ean) {
+          searchValue = rowData.ean;
+        }
+        
+        if (searchValue) {
+          searchInput.value = searchValue;
+          searchInput.focus();
+          searchInput.setSelectionRange(searchValue.length, searchValue.length);
+          render();
+          
+          importStatus.textContent = `🔍 Pretraga: "${searchValue}"`;
+          importStatus.className = 'import-status success';
+          setTimeout(() => { 
+            importStatus.className = 'import-status';
+            importStatus.textContent = '';
+          }, 2000);
+        }
+      }
+
+      // --- Render funkcija s dodanim dvoklikom ---
+      function render() {
+        const filtered = getFilteredData();
+        const loc = locationInput.value.trim();
+        updateAddressDisplay(loc && locationSet.has(loc) ? loc : '');
+        updateLocationCountBadge();
+
+        const count = filtered.length;
+        itemCount.innerHTML = `${count} linija${fullData.length ? ` (od ${fullData.length})` : ''}`;
+
+        if (!fullData.length) {
+          const msg = '📂 Uvezite Excel datoteku';
+          cardsContainer.innerHTML = `<div class="empty-state">${msg}</div>`;
+          tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">${msg}</td></tr>`;
+          return;
+        }
+
+        if (!loc || !locationSet.has(loc)) {
+          const msg = '🔍 Odaberite lokaciju';
+          cardsContainer.innerHTML = `<div class="empty-state">${msg}</div>`;
+          tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">${msg}</td></tr>`;
+          return;
+        }
+
+        if (!filtered.length) {
+          cardsContainer.innerHTML = `<div class="empty-state">🔎 Nema artikala za odabrane filtere</div>`;
+          tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">🔎 Nema artikala za odabrane filtere</td></tr>`;
+          return;
+        }
+
+        if (currentView === 'cards') {
+          cardsContainer.style.display = 'block';
+          tableContainer.style.display = 'none';
+          cardsContainer.innerHTML = filtered.map(row => `
+              <div class="item-card" data-sifra="${row.awtSifra || ''}" data-artikl="${row.artikl || ''}" data-ean="${row.ean || ''}">
+                <span class="card-label">Šifra</span>
+                <span class="card-value sifra">
+                  ${row.awtSifra || '-'}
+                  ${row.katArt ? `<span class="kat-art-badge">${row.katArt}</span>` : ''}
+                </span>
+                <span class="card-label">Artikl</span><span class="card-value">${row.artikl || '-'}</span>
+                <span class="card-label">EAN</span><span class="card-value">${row.ean || '-'}</span>
+                <span class="card-label">Kat.</span>
+                <span class="card-value">
+                  <span class="card-tags">
+                    ${row.vrsta ? `<span class="badge-vrsta">${row.vrsta}</span>` : ''}
+                    ${row.podvrsta ? `<span class="badge-podvrsta">${row.podvrsta}</span>` : ''}
+                  </span>
+                </span>
+              </div>
+            `).join('');
+
+          cardsContainer.querySelectorAll('.item-card').forEach(card => {
+            card.addEventListener('dblclick', function(e) {
+              const rowData = {
+                awtSifra: this.dataset.sifra,
+                artikl: this.dataset.artikl,
+                ean: this.dataset.ean
+              };
+              handleArticleDoubleClick(rowData);
+            });
+          });
+
+        } else {
+          cardsContainer.style.display = 'none';
+          tableContainer.style.display = 'block';
+          tableBody.innerHTML = filtered.map(row => `<tr class="table-row-clickable" 
+                data-sifra="${row.awtSifra || ''}" 
+                data-artikl="${row.artikl || ''}" 
+                data-ean="${row.ean || ''}">
+              <td><strong>${row.awtSifra || ''}</strong></td>
+              <td>${row.artikl || ''}</td>
+              <td>${row.ean || ''}</td>
+              <td>${row.vrsta ? `<span class="table-badge-vrsta">${row.vrsta}</span>` : ''}</td>
+              <td>${row.podvrsta ? `<span class="table-badge-podvrsta">${row.podvrsta}</span>` : ''}</td>
+            </tr>`).join('');
+
+          tableBody.querySelectorAll('.table-row-clickable').forEach(row => {
+            row.addEventListener('dblclick', function(e) {
+              const rowData = {
+                awtSifra: this.dataset.sifra,
+                artikl: this.dataset.artikl,
+                ean: this.dataset.ean
+              };
+              handleArticleDoubleClick(rowData);
+            });
+          });
+        }
+      }
+
+      // --- Location suggestions ---
+      function showSuggestions(query) {
+        if (!query || query.length < 1 || !locationSet.size) {
+          suggestionsContainer.classList.remove('show');
+          return;
+        }
+
+        const matches = Array.from(locationSet)
+          .filter(l => l.toLowerCase().includes(query.toLowerCase()))
+          .sort((a, b) => a.localeCompare(b, 'hr'))
+          .slice(0, 15);
+
+        if (!matches.length) {
+          suggestionsContainer.classList.remove('show');
+          return;
+        }
+
+        suggestionsContainer.innerHTML = matches.map((loc, index) => `
+            <div class="suggestion-item" data-index="${index}" data-location="${loc}">
+              <span>${loc}</span>
+              ${locationMap.has(loc) ? `<span class="suggestion-grad">${locationMap.get(loc).grad || ''}</span>` : ''}
+            </div>
+          `).join('');
+
+        suggestionsContainer.classList.add('show');
+        selectedSuggestionIndex = -1;
+      }
+
+      function hideSuggestions() {
+        suggestionsContainer.classList.remove('show');
+      }
+
+      function selectLocation(loc) {
+        locationInput.value = loc;
+        localStorage.setItem('asortimanSelectedLocation', loc);
+        hideSuggestions();
+        render();
+      }
+
+      // --- Location input events ---
+      locationInput.addEventListener('input', function(e) {
+        const val = this.value;
+
+        clearTimeout(locationInputTimeout);
+        locationInputTimeout = setTimeout(() => {
+          if (val.length > 0) {
+            showSuggestions(val);
+          } else {
+            hideSuggestions();
+          }
+          if (val === '') {
+            localStorage.removeItem('asortimanSelectedLocation');
+            render();
+          }
+        }, 300);
+      });
+
+      locationInput.addEventListener('keydown', function(e) {
+        const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (items.length) {
+            selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+            highlightSuggestion(items);
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (items.length) {
+            selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+            highlightSuggestion(items);
+          }
+        } else if (e.key === 'Enter') {
+          if (selectedSuggestionIndex >= 0 && items.length) {
+            e.preventDefault();
+            const loc = items[selectedSuggestionIndex].dataset.location;
+            if (loc) selectLocation(loc);
+          } else {
+            const val = this.value.trim();
+            if (val && locationSet.has(val)) {
+              selectLocation(val);
+            } else {
+              const match = Array.from(locationSet).find(l => l.toLowerCase() === val.toLowerCase());
+              if (match) selectLocation(match);
+            }
+          }
+        } else if (e.key === 'Escape') {
+          hideSuggestions();
+        }
+      });
+
+      locationInput.addEventListener('blur', function() {
+        setTimeout(() => hideSuggestions(), 200);
+
+        const val = this.value.trim();
+        if (val && locationSet.has(val)) {
+          localStorage.setItem('asortimanSelectedLocation', val);
+          render();
+        } else if (val) {
+          const match = Array.from(locationSet).find(l => l.toLowerCase() === val.toLowerCase());
+          if (match) { this.value = match;
+            localStorage.setItem('asortimanSelectedLocation', match);
+            render(); } else if (!val) { localStorage.removeItem('asortimanSelectedLocation');
+            render(); }
+        }
+      });
+
+      function highlightSuggestion(items) {
+        items.forEach((el, idx) => {
+          el.classList.toggle('active', idx === selectedSuggestionIndex);
+        });
+        if (selectedSuggestionIndex >= 0 && items[selectedSuggestionIndex]) {
+          items[selectedSuggestionIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+
+      suggestionsContainer.addEventListener('click', function(e) {
+        const item = e.target.closest('.suggestion-item');
+        if (item) {
+          const loc = item.dataset.location;
+          if (loc) selectLocation(loc);
+        }
+      });
+
+      // --- View toggle ---
+      viewCardsBtn.addEventListener('click', () => { currentView = 'cards';
+        viewCardsBtn.className = 'active';
+        viewTableBtn.className = '';
+        render(); });
+      viewTableBtn.addEventListener('click', () => { currentView = 'table';
+        viewTableBtn.className = 'active';
+        viewCardsBtn.className = '';
+        render(); });
+
+      // --- EXPORT FUNKCIJE ---
+      
+      function exportFilteredArticles() {
+        const filtered = getFilteredData();
+        if (!filtered.length) { 
+          alert('Nema podataka za export. Provjerite filtere.'); 
+          return; 
+        }
+
+        const loc = locationInput.value.trim();
+        const data = filtered.map(row => ({
+          'Šifra': row.awtSifra || '',
+          'Artikl': row.artikl || '',
+          'EAN': row.ean || '',
+          'Vrsta': row.vrsta || '',
+          'Podvrsta': row.podvrsta || '',
+          'Kategorija': row.katArt || '',
+          'Lokacija': row.lokacija || '',
+          'Kupac': row.kupac || ''
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data);
+
+        const colWidths = [
+          { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 20 }
+        ];
+        ws['!cols'] = colWidths;
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Prikaz');
+
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `asortiman_prikaz_${loc}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        importStatus.textContent = `📊 Exportano ${filtered.length} artikala (prikaz)`;
+        importStatus.className = 'import-status success';
+        setTimeout(() => { importStatus.className = 'import-status'; }, 3000);
+      }
+
+      function exportCustomerLocations() {
+        const loc = locationInput.value.trim();
+        if (!loc || !locationSet.has(loc)) {
+          alert('Najprije odaberite lokaciju da bi se odredio kupac.');
+          return;
+        }
+        
+        const locInfo = locationMap.get(loc);
+        if (!locInfo || !locInfo.kupac) {
+          alert('Za odabranu lokaciju nije definiran kupac.');
+          return;
+        }
+        
+        const customerName = locInfo.kupac;
+        
+        const filteredByCriteria = getFilteredByCriteria();
+        
+        if (!filteredByCriteria.length) { 
+          alert('Nema artikala za odabrane filtere (vrsta, podvrsta, pretraga).'); 
+          return; 
+        }
+
+        const uniqueSifre = new Set();
+        filteredByCriteria.forEach(row => {
+          if (row.awtSifra) uniqueSifre.add(row.awtSifra);
+        });
+
+        if (uniqueSifre.size === 0) {
+          alert('Nema šifri u filtriranim podacima.');
+          return;
+        }
+
+        const allMatchingArticles = [];
+        uniqueSifre.forEach(sifra => {
+          const matches = fullData.filter(row => row.awtSifra === sifra && row.kupac === customerName);
+          matches.forEach(row => {
+            allMatchingArticles.push(row);
+          });
+        });
+
+        if (!allMatchingArticles.length) {
+          alert(`Nema artikala za kupca "${customerName}" na drugim lokacijama.`);
+          return;
+        }
+
+        const locationGroups = new Map();
+        allMatchingArticles.forEach(row => {
+          const lokacija = row.lokacija;
+          if (!locationGroups.has(lokacija)) {
+            const locInfo2 = locationMap.get(lokacija) || { adresa: '', grad: '', kupac: '' };
+            locationGroups.set(lokacija, {
+              adresa: locInfo2.adresa || '',
+              grad: locInfo2.grad || '',
+              kupac: locInfo2.kupac || '',
+              artikli: []
+            });
+          }
+          locationGroups.get(lokacija).artikli.push(row);
+        });
+
+        const exportData = [];
+        const sortedLocations = Array.from(locationGroups.keys()).sort((a, b) => a.localeCompare(b, 'hr'));
+        
+        sortedLocations.forEach(lokacija => {
+          const group = locationGroups.get(lokacija);
+          group.artikli.sort((a, b) => (a.awtSifra || '').localeCompare(b.awtSifra || '', 'hr'));
+          
+          group.artikli.forEach(row => {
+            exportData.push({
+              'Kupac': group.kupac || '',
+              'Lokacija': lokacija,
+              'Adresa': group.adresa || '',
+              'Grad': group.grad || '',
+              'Šifra': row.awtSifra || '',
+              'Artikl': row.artikl || '',
+              'EAN': row.ean || '',
+              'Vrsta': row.vrsta || '',
+              'Podvrsta': row.podvrsta || '',
+              'Kategorija': row.katArt || ''
+            });
+          });
+        });
+
+        if (!exportData.length) {
+          alert('Nema podataka za export.');
+          return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(exportData);
+
+        const colWidths = [
+          { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 20 }, { wch: 15 }, 
+          { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }
+        ];
+        ws['!cols'] = colWidths;
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Lokacije');
+
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        const locCount = locationGroups.size;
+        const safeCustomerName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `asortiman_kupac_${safeCustomerName}_${locCount}lok_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        const searchTerm = searchInput.value.trim();
+        const vrstaFilter = filterVrsta.value || 'sve';
+        const podFilter = filterPodvrsta.value || 'sve';
+        let filterInfo = `Vrsta: ${vrstaFilter}, Podvrsta: ${podFilter}`;
+        if (searchTerm) filterInfo += `, Pretraga: "${searchTerm}"`;
+        
+        importStatus.textContent = `📊 Exportano ${exportData.length} artikala (${uniqueSifre.size} šifri) na ${locationGroups.size} lokacija kupca "${customerName}" (filteri: ${filterInfo})`;
+        importStatus.className = 'import-status success';
+        setTimeout(() => { importStatus.className = 'import-status'; }, 5000);
+      }
+
+      // --- NOVO: Export CIJELOG asortimana kupca (bez filtera), grupiran po artiklu ---
+      function exportCustomerFullAssortment() {
+        const loc = locationInput.value.trim();
+        if (!loc || !locationSet.has(loc)) {
+          alert('Najprije odaberite lokaciju da bi se odredio kupac.');
+          return;
+        }
+
+        const locInfo = locationMap.get(loc);
+        if (!locInfo || !locInfo.kupac) {
+          alert('Za odabranu lokaciju nije definiran kupac.');
+          return;
+        }
+
+        const customerName = locInfo.kupac;
+
+        // Uzmi SVE retke tog kupca (kroz sve njegove lokacije) — bez filtera i pretrage
+        const customerData = fullData.filter(row => row.kupac === customerName);
+
+        if (!customerData.length) {
+          alert(`Nema artikala za kupca "${customerName}".`);
+          return;
+        }
+
+        // Grupiranje po artiklu (ključ: šifra, fallback: naziv+EAN)
+        const articleMap = new Map();
+
+        for (const row of customerData) {
+          const sifra = row.awtSifra || '';
+          const artikl = row.artikl || '';
+          const ean = row.ean || '';
+          const key = sifra ? `S:${sifra}` : `A:${artikl}|E:${ean}`;
+
+          if (!articleMap.has(key)) {
+            articleMap.set(key, {
+              awtSifra: sifra,
+              artikl: artikl,
+              ean: ean,
+              vrsta: row.vrsta || '',
+              podvrsta: row.podvrsta || '',
+              katArt: row.katArt || '',
+              lokacije: new Set()
+            });
+          }
+          if (row.lokacija) {
+            articleMap.get(key).lokacije.add(row.lokacija);
+          }
+        }
+
+        const data = Array.from(articleMap.values()).map(a => ({
+          'Šifra': a.awtSifra,
+          'Artikl': a.artikl,
+          'EAN': a.ean,
+          'Vrsta': a.vrsta,
+          'Podvrsta': a.podvrsta,
+          'Kategorija': a.katArt,
+          'Broj lokacija': a.lokacije.size
+        }));
+
+        // Sortiranje: Vrsta → Podvrsta → Artikl
+        data.sort((a, b) =>
+          (a['Vrsta'] || '').localeCompare(b['Vrsta'] || '', 'hr') ||
+          (a['Podvrsta'] || '').localeCompare(b['Podvrsta'] || '', 'hr') ||
+          (a['Artikl'] || '').localeCompare(b['Artikl'] || '', 'hr')
+        );
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data);
+        ws['!cols'] = [
+          { wch: 15 }, // Šifra
+          { wch: 35 }, // Artikl
+          { wch: 18 }, // EAN
+          { wch: 20 }, // Vrsta
+          { wch: 20 }, // Podvrsta
+          { wch: 15 }, // Kategorija
+          { wch: 12 }  // Broj lokacija
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'Asortiman kupca');
+
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        const safeCustomerName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+        const totalLocations = new Set(customerData.map(r => r.lokacija)).size;
+        const fileName = `asortiman_kupac_${safeCustomerName}_${data.length}art_${totalLocations}lok_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        importStatus.textContent = `🏬 Export kupca "${customerName}": ${data.length} artikala, ${totalLocations} lokacija`;
+        importStatus.className = 'import-status success';
+        setTimeout(() => { importStatus.className = 'import-status'; }, 5000);
+      }
+
+      exportFilteredBtn.addEventListener('click', exportFilteredArticles);
+      exportLocationsBtn.addEventListener('click', exportCustomerLocations);
+      exportCustomerBtn.addEventListener('click', exportCustomerFullAssortment);
+
+      // --- Process Excel ---
+      async function processExcelData(workbook, sourceName = '') {
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+        if (!json || !json.length) {
+          importStatus.textContent = '❌ Excel datoteka je prazna';
+          importStatus.className = 'import-status error';
+          return false;
+        }
+
+        const headers = Object.keys(json[0]);
+
+        const findKey = (patterns) => {
+          for (const p of patterns) {
+            const found = headers.find(h => h.trim().toUpperCase() === p.toUpperCase());
+            if (found) return found;
+            const partial = headers.find(h => h.trim().toUpperCase().includes(p.toUpperCase()));
+            if (partial) return partial;
+          }
+          return null;
+        };
+
+        const keyLokacija = findKey(['LOKACIJA']);
+        const keyAdresa = findKey(['ADRESA']);
+        const keyGrad = findKey(['GRAD']);
+        const keyKupac = findKey(['KUPAC']);
+        const keyKatLokacije = findKey(['KAT.', 'KAT', 'KATEGORIJA', 'KAT LOKACIJE', 'KAT LOK']);
+        const keyKatArt = findKey(['KAT.ART', 'KAT ART', 'KATART', 'KAT ARTIKL']);
+        const keyAwtSifra = findKey(['AWT ŠIFRA', 'AWT SIFRA', 'ŠIFRA', 'SIFRA']);
+        const keyArtikl = findKey(['ARTIKL', 'NAZIV', 'OPIS']);
+        const keyEAN = findKey(['EAN', 'BARCODE', 'BAR KOD']);
+        const keyVrsta = findKey(['VRSTA', 'KATEGORIJA']);
+        const keyPodvrsta = findKey(['PODVRSTA', 'SUBKATEGORIJA']);
+
+        if (!keyLokacija || !keyAdresa || !keyGrad || !keyAwtSifra || !keyArtikl || !keyEAN) {
+          importStatus.textContent = '❌ Nedostaju stupci: LOKACIJA, ADRESA, GRAD, AWT ŠIFRA, ARTIKL, EAN';
+          importStatus.className = 'import-status error';
+          return false;
+        }
+
+        const newData = [];
+        const locSet = new Set();
+        const locMap = new Map();
+
+        for (const row of json) {
+          const lokacija = normalizeStr(row[keyLokacija]);
+          if (!lokacija) continue;
+
+          const adresa = normalizeStr(row[keyAdresa]);
+          const grad = normalizeStr(row[keyGrad]);
+          const kupac = keyKupac ? normalizeStr(row[keyKupac]) : '';
+          const katLokacijeRaw = keyKatLokacije ? normalizeStr(row[keyKatLokacije]) : '';
+
+          locSet.add(lokacija);
+
+          if (!locMap.has(lokacija)) {
+            locMap.set(lokacija, {
+              adresa,
+              grad,
+              kupac,
+              katLokacije: [],
+              katFrekvencija: {}
+            });
+          }
+
+          if (katLokacijeRaw) {
+            const katValues = katLokacijeRaw.split(',').map(s => s.trim()).filter(s => s);
+            const info = locMap.get(lokacija);
+            katValues.forEach(k => {
+              if (!info.katLokacije.includes(k)) {
+                info.katLokacije.push(k);
+              }
+              if (!info.katFrekvencija[k]) {
+                info.katFrekvencija[k] = 0;
+              }
+              info.katFrekvencija[k]++;
+            });
+          }
+
+          const awtSifra = normalizeStr(row[keyAwtSifra]);
+          const artikl = normalizeStr(row[keyArtikl]);
+          const ean = normalizeStr(row[keyEAN]);
+          const vrsta = keyVrsta ? normalizeStr(row[keyVrsta]) : '';
+          const podvrsta = keyPodvrsta ? normalizeStr(row[keyPodvrsta]) : '';
+          const katArt = keyKatArt ? normalizeStr(row[keyKatArt]) : '';
+
+          if (awtSifra || artikl || ean) {
+            newData.push({
+              lokacija,
+              adresa,
+              grad,
+              kupac,
+              katLokacije: katLokacijeRaw,
+              awtSifra,
+              artikl,
+              ean,
+              vrsta,
+              podvrsta,
+              katArt
+            });
+          }
+        }
+
+        if (!newData.length) {
+          importStatus.textContent = '❌ Nema valjanih podataka';
+          importStatus.className = 'import-status error';
+          return false;
+        }
+
+        for (const row of newData) {
+          const lokacija = row.lokacija;
+          if (locMap.has(lokacija)) {
+            const info = locMap.get(lokacija);
+            if (!Array.isArray(info.katLokacije)) {
+              info.katLokacije = [];
+            }
+            if (row.katLokacije && typeof row.katLokacije === 'string') {
+              const katValues = row.katLokacije.split(',').map(s => s.trim()).filter(s => s);
+              katValues.forEach(k => {
+                if (!info.katLokacije.includes(k)) {
+                  info.katLokacije.push(k);
+                }
+                if (!info.katFrekvencija[k]) {
+                  info.katFrekvencija[k] = 0;
+                }
+                info.katFrekvencija[k]++;
+              });
+            }
+          }
+        }
+
+        fullData = newData;
+        locationSet = locSet;
+        locationMap = locMap;
+
+        await saveAllData(fullData);
+        updateSaveStatus(true);
+        populateFilters();
+        setImportDate();
+        updateDataInfo();
+        updateLocationStats();
+        fileStatus.textContent = sourceName ? `✅ ${fullData.length}` : `✅ ${fullData.length}`;
+        importStatus.textContent = `✅ Uvezeno ${fullData.length} artikala`;
+        importStatus.className = 'import-status success';
+
+        const savedLoc = localStorage.getItem('asortimanSelectedLocation');
+        if (savedLoc && locationSet.has(savedLoc)) locationInput.value = savedLoc;
+        else if (locationSet.size === 1) { locationInput.value = Array.from(locationSet)[0];
+          localStorage.setItem('asortimanSelectedLocation', locationInput.value); } else locationInput.value = '';
+
+        searchInput.value = '';
+        hideSuggestions();
+        render();
+        return true;
+      }
+
+      // --- Load from DB ---
+      async function loadFromDB() {
+        try {
+          const data = await loadAllData();
+          if (!data || !data.length) return false;
+          fullData = data;
+          locationSet = new Set();
+          locationMap = new Map();
+
+          const tempMap = new Map();
+          for (const row of fullData) {
+            locationSet.add(row.lokacija);
+            if (!tempMap.has(row.lokacija)) {
+              tempMap.set(row.lokacija, {
+                adresa: row.adresa || '',
+                grad: row.grad || '',
+                kupac: row.kupac || '',
+                katLokacije: [],
+                katFrekvencija: {}
+              });
+            }
+            if (row.katLokacije) {
+              let katValues = [];
+              if (typeof row.katLokacije === 'string') {
+                katValues = row.katLokacije.split(',').map(s => s.trim()).filter(s => s);
+              } else if (Array.isArray(row.katLokacije)) {
+                katValues = row.katLokacije;
+              }
+              const info = tempMap.get(row.lokacija);
+              katValues.forEach(k => {
+                if (!info.katLokacije.includes(k)) {
+                  info.katLokacije.push(k);
+                }
+                if (!info.katFrekvencija[k]) {
+                  info.katFrekvencija[k] = 0;
+                }
+                info.katFrekvencija[k]++;
+              });
+            }
+          }
+
+          for (const [key, value] of tempMap) {
+            locationMap.set(key, value);
+          }
+
+          populateFilters();
+          updateDataInfo();
+          updateLocationStats();
+          updateSaveStatus(true);
+          fileStatus.textContent = `📂 ${fullData.length}`;
+          const savedLoc = localStorage.getItem('asortimanSelectedLocation');
+          if (savedLoc && locationSet.has(savedLoc)) locationInput.value = savedLoc;
+          else if (locationSet.size === 1) { locationInput.value = Array.from(locationSet)[0];
+            localStorage.setItem('asortimanSelectedLocation', locationInput.value); }
+          render();
+          return true;
+        } catch (err) {
+          console.error('loadFromDB error:', err);
+          return false;
+        }
+      }
+
+      // --- GitHub import ---
+      async function importFromGithub() {
+        const GITHUB_USERNAME = 'zoranbjelajac1-debug';
+        const GITHUB_REPO = 'PODACI_IMPORT';
+        const GITHUB_BRANCH = 'main';
+        const EXCEL_FILE = 'ASORTIMAN ZA IMPORT.xlsx';
+
+        importStatus.textContent = '⏳ Preuzimanje ...';
+        importStatus.className = 'import-status loading';
+
+        try {
+          const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${EXCEL_FILE}`;
+          
+          console.log('Dohvaćam:', RAW_URL);
+          
+          const response = await fetch(RAW_URL);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const arrayBuffer = await response.arrayBuffer();
+          
+          if (arrayBuffer.byteLength === 0) {
+            throw new Error('Datoteka je prazna');
+          }
+          
+          console.log('Veličina datoteke:', arrayBuffer.byteLength, 'bytes');
+          
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          
+          if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            throw new Error('Excel datoteka nema listova');
+          }
+          
+          await processExcelData(workbook, 'github');
+          
+        } catch (err) {
+          console.error('GitHub import error:', err);
+          
+          try {
+            importStatus.textContent = '⏳ Pokušavam GitHub API...';
+            
+            const API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${EXCEL_FILE}`;
+            
+            const response = await fetch(API_URL);
+            
+            if (!response.ok) {
+              throw new Error(`API HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            const base64Content = data.content;
+            const cleanBase64 = base64Content.replace(/\n/g, '');
+            const binaryString = atob(cleanBase64);
+            
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            if (bytes.length === 0) {
+              throw new Error('Dekodirana datoteka je prazna');
+            }
+            
+            const workbook = XLSX.read(bytes, { type: 'array' });
+            await processExcelData(workbook, 'github-api');
+            
+          } catch (apiErr) {
+            console.error('GitHub API error:', apiErr);
+            
+            importStatus.textContent = `❌ Greška: ${apiErr.message}. Molimo ručno učitajte datoteku.`;
+            importStatus.className = 'import-status error';
+            
+            fileInput.click();
+          }
+        }
+      }
+
+      // --- Event listeners ---
+      
+      githubImportBtn.addEventListener('click', importFromGithub);
+
+      fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        importStatus.textContent = '⏳ Učitavanje...';
+        importStatus.className = 'import-status loading';
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+          try {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            await processExcelData(workbook, file.name);
+            fileStatus.textContent = `📄 ${file.name}`;
+          } catch (err) {
+            console.error('Import error:', err);
+            importStatus.textContent = `❌ Greška: ${err.message}`;
+            importStatus.className = 'import-status error';
+          }
+        };
+        reader.readAsArrayBuffer(file);
+        fileInput.value = '';
+      });
+
+      backupBtn.addEventListener('click', async () => {
+        try {
+          const data = await loadAllData();
+          if (!data.length) { alert('Nema podataka za backup.'); return; }
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `asortiman_${new Date().toISOString().slice(0,10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          alert('Greška pri backup-u: ' + err.message);
+        }
+      });
+
+      restoreBtn.addEventListener('click', () => restoreInput.click());
+      restoreInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        importStatus.textContent = '⏳ Restore...';
+        importStatus.className = 'import-status loading';
+        const text = await file.text();
+        try {
+          const data = JSON.parse(text);
+          if (!Array.isArray(data) || !data.length) {
+            importStatus.textContent = '❌ Neispravan JSON';
+            importStatus.className = 'import-status error';
+            return;
+          }
+          fullData = data;
+          locationSet = new Set();
+          locationMap = new Map();
+
+          const tempMap = new Map();
+          for (const row of fullData) {
+            locationSet.add(row.lokacija);
+            if (!tempMap.has(row.lokacija)) {
+              tempMap.set(row.lokacija, {
+                adresa: row.adresa || '',
+                grad: row.grad || '',
+                kupac: row.kupac || '',
+                katLokacije: [],
+                katFrekvencija: {}
+              });
+            }
+            if (row.katLokacije) {
+              let katValues = [];
+              if (typeof row.katLokacije === 'string') {
+                katValues = row.katLokacije.split(',').map(s => s.trim()).filter(s => s);
+              } else if (Array.isArray(row.katLokacije)) {
+                katValues = row.katLokacije;
+              }
+              const info = tempMap.get(row.lokacija);
+              katValues.forEach(k => {
+                if (!info.katLokacije.includes(k)) {
+                  info.katLokacije.push(k);
+                }
+                if (!info.katFrekvencija[k]) {
+                  info.katFrekvencija[k] = 0;
+                }
+                info.katFrekvencija[k]++;
+              });
+            }
+          }
+
+          for (const [key, value] of tempMap) {
+            locationMap.set(key, value);
+          }
+
+          await saveAllData(fullData);
+          populateFilters();
+          updateDataInfo();
+          updateLocationStats();
+          updateSaveStatus(true);
+          setImportDate();
+          fileStatus.textContent = `📂 ${fullData.length} (restore)`;
+          importStatus.textContent = `✅ Restore uspješan (${fullData.length} artikala)`;
+          importStatus.className = 'import-status success';
+          const savedLoc = localStorage.getItem('asortimanSelectedLocation');
+          if (savedLoc && locationSet.has(savedLoc)) locationInput.value = savedLoc;
+          else if (locationSet.size === 1) { locationInput.value = Array.from(locationSet)[0];
+            localStorage.setItem('asortimanSelectedLocation', locationInput.value); }
+          render();
+        } catch (err) {
+          importStatus.textContent = `❌ Greška: ${err.message}`;
+          importStatus.className = 'import-status error';
+        }
+        restoreInput.value = '';
+      });
+
+      clearDataBtn.addEventListener('click', async () => {
+        if (!fullData.length) return;
+        if (!confirm('Obrisati sve podatke?')) return;
+        try {
+          await clearAllDataDB();
+          fullData = [];
+          locationSet.clear();
+          locationMap.clear();
+          localStorage.removeItem('asortimanSelectedLocation');
+          locationInput.value = '';
+          searchInput.value = '';
+          hideSuggestions();
+          populateFilters();
+          updateDataInfo();
+          updateLocationStats();
+          updateSaveStatus(false);
+          clearImportDate();
+          fileStatus.textContent = '-';
+          importStatus.textContent = '🗑️ Podaci obrisani';
+          importStatus.className = 'import-status';
+          render();
+        } catch (err) {
+          alert('Greška pri brisanju: ' + err.message);
+        }
+      });
+
+      // --- Filter inputs ---
+      const debouncedRender = () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(render, 300);
+      };
+
+      filterVrsta.addEventListener('change', () => { updatePodvrstaFilter();
+        render(); });
+      filterPodvrsta.addEventListener('change', render);
+      searchInput.addEventListener('input', debouncedRender);
+
+      resetBtn.addEventListener('click', () => {
+        filterVrsta.value = '';
+        filterPodvrsta.value = '';
+        searchInput.value = '';
+        updatePodvrstaFilter();
+        render();
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.loc-selector')) {
+          hideSuggestions();
+        }
+      });
+
+      // --- Init ---
+      loadFromDB().then(() => {
+        if (importDate) {
+          updateDataInfo();
+        }
+      });
+
+      // --- Service Worker ---
+      if ('serviceWorker' in navigator) {
+        const swCode = `const CACHE="asortiman-v3"; const FILES=["./"]; self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)))); self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(url).catch(() => {});
+      }
+
+    })();
+  </script>
+</body>
+</html>
